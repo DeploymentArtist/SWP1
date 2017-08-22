@@ -1,0 +1,81 @@
+<job id="Install-ReportViewer2008SP1">
+<script language="VBScript" src="..\..\scripts\ZTIUtility.vbs"/>
+<script language="VBScript"> 
+
+'//----------------------------------------------------------------------------
+'// Solution: Hydration
+'// Purpose: Used to install Report Viewer 2008 SP1
+'// Usage: cscript Install-ReportViewer2008SP1.wsf [/debug:true]
+'// Version: 1.0 - August 7, 2012 - Johan Arwidmark
+'//
+'// This script is provided "AS IS" with no warranties, confers no rights and 
+'// is not supported by the authors or Deployment Artist. 
+'//
+'//----------------------------------------------------------------------------
+
+'//----------------------------------------------------------------------------
+'// Global constant and variable declarations
+'//---------------------------------------------------------------------------- 
+
+Option Explicit 
+
+Dim iRetVal 
+
+'//----------------------------------------------------------------------------
+'// End declarations
+'//---------------------------------------------------------------------------- 
+
+'//----------------------------------------------------------------------------
+'// Main routine
+'//---------------------------------------------------------------------------- 
+
+On Error Resume Next
+iRetVal = ZTIProcess
+ProcessResults iRetVal
+On Error Goto 0 
+
+'//---------------------------------------------------------------------------
+'//
+'// Function: ZTIProcess()
+'//
+'// Input: None
+'// 
+'// Return: Success - 0
+'// Failure - non-zero
+'//
+'// Purpose: Perform main ZTI processing
+'// 
+'//---------------------------------------------------------------------------
+Function ZTIProcess() 
+
+	Dim sSetupFile
+	Dim sArguments
+	
+	oLogging.CreateEntry "Install Report Viewer 2008 SP1: Starting installation", LogTypeInfo
+	
+	sSetupFile = oUtility.ScriptDir & "\Source\ReportViewer.exe"
+	sArguments = "/q"
+
+	If not oFSO.FileExists(sSetupFile) then
+		oLogging.CreateEntry "Install Report Viewer 2008 SP1: " & sFile & " was not found, unable to install Report Viewer 2008 SP1", LogTypeError
+		ZTIProcess = Failure
+		Exit Function
+	End if
+	
+	' Install Report Viewer 2008 SP1 
+	iRetVal = oUtility.RunWithHeartbeat("""" & sSetupFile & """ " & sArguments)
+	
+	' Verify Installation
+	if (iRetVal = 0) or (iRetVal = 3010) then
+		ZTIProcess = Success 
+	Else 
+		ZTIProcess = Failure
+	End If
+	
+	oLogging.CreateEntry "Install Report Viewer 2008 SP1: Return code from command = " & iRetVal, LogTypeInfo
+	oLogging.CreateEntry "Install Report Viewer 2008 SP1: Finished installation", LogTypeInfo
+	
+End Function 
+
+</script>
+</job>

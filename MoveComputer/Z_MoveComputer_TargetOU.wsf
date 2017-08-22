@@ -1,0 +1,106 @@
+<job id="Z_MoveComputer_TargetOU">
+   <script language="VBScript" src="ZTIUtility.vbs"/>
+   <script language="VBScript" src="ZTIDataAccess.vbs"/>
+   <script language="VBScript">
+
+' //***************************************************************************
+' // ***** Script Header *****
+' //
+' // File:      Z_MoveComputer_TargetOU.wsf
+' //
+' // Purpose:   Move computer to OU specified in MDT by MachineObjectOU
+' //
+' // Usage:     cscript Z_MoveComputer_TargetOU [/debug:true]
+' //
+' //
+' // Customer History:
+' // 1    MK    01/18/2009  changed to use Webservice instead of AD Scripting
+' // 2    MK    08/28/2009   Updated example Scripts for MDT 2010
+' // 3    MK    04/08/2010   Rewrote Script to fit to MDT 2010 standard scripts
+' //                         Added IniFile entry 
+' //
+' // ***** End Header *****
+' //***************************************************************************
+
+Option Explicit
+RunNewInstance
+
+'//----------------------------------------------------------------------------
+'//
+'// Global constant and variable declarations
+'//
+'//---------------------------------------------------------------------------- 
+
+Dim iRetVal 
+
+'//----------------------------------------------------------------------------
+'// End declarations
+'//---------------------------------------------------------------------------- 
+
+'//----------------------------------------------------------------------------
+'//  Main Class
+'//----------------------------------------------------------------------------
+
+Class Z_MoveComputer_TargetOU
+
+	'//----------------------------------------------------------------------------
+	'//  Class instance variable declarations
+	'//----------------------------------------------------------------------------
+
+	' No instance variables are required
+	
+
+	'//----------------------------------------------------------------------------
+	'//  Constructor to initialize needed global objects
+	'//----------------------------------------------------------------------------
+
+	Private Sub Class_Initialize
+
+		' No initialization is required
+
+	End Sub
+	
+	
+	'//----------------------------------------------------------------------------
+	'//  Main routine
+	'//----------------------------------------------------------------------------
+
+	Function Main
+
+        iRetVal = Success
+
+        Dim oService, oXML, sResult
+
+	    oLogging.CreateEntry "Move Computer: Start processing Move computer to target OU routine", LogTypeInfo
+
+	    ' Create the web service instance
+	    Set oService = new WebService
+
+        oService.IniFile = "CustomSettings.ini"
+	    oService.SectionName = "MoveComputerToOU"
+
+	    ' Make the web service call
+	    Set oXML = oService.Query
+	    If oXML is Nothing then
+		    oLogging.CreateEntry "Move Computer: Unable to call MoveComputerToOU web service.", LogTypeWarning
+	    Else
+		    oXML.setProperty "SelectionNamespaces", "xmlns:mk='http://maikkoster.com/Deployment'"
+		    sResult = UCase(oXML.SelectSingleNode("mk:boolean").Text)
+		    
+		    If sResult <> "TRUE" then
+		        oLogging.CreateEntry "Move Computer: Move was not successful", LogTypeWarning
+		        iRetVal = Failure
+		    Else
+		        oLogging.CreateEntry "Move Computer: Successfully moved Computer to target OU", LogTypeInfo
+		    End If
+	    End if	
+
+		Main = iRetVal
+
+	End Function
+
+End Class
+
+   </script>
+</job>
+

@@ -1,0 +1,12 @@
+' Generate Computer name based on MacAddress
+Dim sCN
+sCN = oEnvironment.Item("MACAddress")
+sCN = Replace(sCN,":","")
+' Append Laptop/Desktop specific Prefix
+If oEnvironment.Item("IsLaptop") = "TRUE" Then
+  sCN = "L" & sCN
+Else
+  sCN = "D" & sCN
+End If
+' Update OSDComputerName property
+oEnvironment.Item("OSDComputerName") = sCN

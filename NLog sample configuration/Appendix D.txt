@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<nlog xmlns=http://www.nlog-project.org/schemas/NLog.xsd
+      xmlns:xsi=http://www.w3.org/2001/XMLSchema-instance
+      autoReload="true">
+  <!-- 
+  See http://nlog-project.org/wiki/Configuration_file 
+  for information on customizing logging rules and outputs.
+   -->
+  <targets async="true">
+    <target name="default"
+      xsi:type="File"
+      fileName="${basedir}/logs/Default_current.log"
+      layout="${longdate} ${callsite} ${uppercase:${level}}:
+        ${message} ${exception:format=Message,StackTrace}"
+      archiveFileName=
+        "${basedir}/logs/Archives/Default.${shortdate}.{#}.log"
+      archiveAboveSize="5242880"
+      archiveEvery="Day"
+      archiveNumbering = "Rolling"
+      maxArchiveFiles="7"
+    />
+    <target name="debug"
+      xsi:type="File"
+      fileName="${basedir}/logs/Debug_current.log"
+      layout="${longdate} ${callsite} ${uppercase:${level}}: 
+        ${message} ${exception:format=Message,StackTrace}"
+      archiveFileName=
+        "${basedir}/logs/Archives/Debug.${shortdate}.{#}.log"
+      archiveAboveSize="5242880"
+      archiveEvery="Day"
+      archiveNumbering = "Rolling"
+      maxArchiveFiles="7" 
+    />
+    <target name="trace"
+      xsi:type="File"
+      fileName="${basedir}/logs/Trace_current.log"
+      layout="${longdate} ${callsite} ${uppercase:${level}}: 
+        ${message} ${exception:format=Message,StackTrace} 
+        ${stacktrace}"
+      archiveFileName=
+        "${basedir}/logs/Archives/Trace.${shortdate}.{#}.log"
+      archiveAboveSize="5242880"
+      archiveEvery="Day"
+      archiveNumbering = "Rolling"
+      maxArchiveFiles="7" 
+    />
+  </targets>
+  <rules>
+    <!-- Uncomment logging rules as required-->
+    <!-- Error and Fatal Error messages only 
+    <logger name="*" minlevel="Error" writeTo="default" />  
+    -->
+    <logger name="*" minlevel="Info" writeTo="default" />
+    <!-- Be aware Debug and Trace will be pretty extensive -->
+    <!-- <logger name="*" minlevel="Debug" writeTo="debug" /> -->
+    <!-- <logger name="*" minlevel="Trace" writeTo="trace" /> -->
+  </rules>
+</nlog>

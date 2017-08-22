@@ -1,0 +1,105 @@
+<job id="Install-MicrosoftVisualC2012x86x64">
+<script language="VBScript" src="..\..\scripts\ZTIUtility.vbs"/>
+<script language="VBScript"> 
+
+'//----------------------------------------------------------------------------
+'// Purpose: Used to install Microsoft Visual C++ 2010 SP1 Redistributable Package
+'// Usage: cscript Install-MicrosoftVisualC2012x86x64.wsf [/debug:true]
+'// Version: 1.1 - August 8, 2012 - Johan Arwidmark
+'//
+'// This script is provided "AS IS" with no warranties, confers no rights and 
+'// is not supported by the authors or Deployment Artist. 
+'//
+'//----------------------------------------------------------------------------
+
+'//----------------------------------------------------------------------------
+'// Global constant and variable declarations
+'//---------------------------------------------------------------------------- 
+
+Option Explicit 
+Dim iRetVal 
+
+'//----------------------------------------------------------------------------
+'// End declarations
+'//---------------------------------------------------------------------------- 
+
+'//----------------------------------------------------------------------------
+'// Main routine
+'//---------------------------------------------------------------------------- 
+
+On Error Resume Next
+iRetVal = ZTIProcess
+ProcessResults iRetVal
+On Error Goto 0 
+
+'//---------------------------------------------------------------------------
+'//
+'// Function: ZTIProcess()
+'//
+'// Input: None
+'// 
+'// Return: Success - 0
+'// Failure - non-zero
+'//
+'// Purpose: Perform main ZTI processing
+'// 
+'//---------------------------------------------------------------------------
+
+Function ZTIProcess() 
+
+	Dim sSetupFilex86
+	Dim sSetupFilex64
+	Dim sArguments
+
+	sSetupFilex86 = oUtility.ScriptDir & "\Source\vcredist_x86.exe"
+	sSetupFilex64 = oUtility.ScriptDir & "\Source\vcredist_x64.exe"
+	sArguments = "/Q"
+
+	oLogging.CreateEntry oUtility.ScriptName & ": Starting installation", LogTypeInfo
+
+	If not oFSO.FileExists(sSetupFilex86) then
+		oLogging.CreateEntry oUtility.ScriptName & ": " & sSetupFilex86 & " was not found, unable to install", LogTypeError
+		ZTIProcess = Failure
+		Exit Function
+	End if
+
+	iRetVal = oUtility.RunWithHeartbeat("""" & sSetupFilex86 & """ " & sArguments)
+	
+	if (iRetVal = 0) or (iRetVal = 3010) then
+		ZTIProcess = Success 
+	Else 
+		ZTIProcess = Failure
+	End If
+	
+	oLogging.CreateEntry oUtility.ScriptName & ": Return code from command = " & iRetVal, LogTypeInfo
+	oLogging.CreateEntry oUtility.ScriptName & ": Finished installation", LogTypeInfo
+
+	' If x64 operating system, also install x64 version	
+	If oEnvironment.Item("Architecture") = "X64" then
+
+		If not oFSO.FileExists(sSetupFilex64) then
+			oLogging.CreateEntry oUtility.ScriptName & ": " & sSetupFilex64 & " was not found, unable to install", LogTypeError
+			ZTIProcess = Failure
+			Exit Function
+		End If
+
+		iRetVal = oUtility.RunWithHeartbeat("""" & sSetupFilex64 & """ " & sArguments)
+	
+		If (iRetVal = 0) or (iRetVal = 3010) then
+			ZTIProcess = Success 
+		Else 
+			ZTIProcess = Failure
+		End If
+	
+		oLogging.CreateEntry oUtility.ScriptName & ": Return code from command = " & iRetVal, LogTypeInfo
+		oLogging.CreateEntry oUtility.ScriptName & ": Finished installation", LogTypeInfo
+
+	End If
+
+
+
+	
+End Function 
+
+</script>
+</job>

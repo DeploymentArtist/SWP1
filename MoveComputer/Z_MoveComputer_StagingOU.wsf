@@ -1,0 +1,126 @@
+<job id="Z_MoveComputer_StagingOU">
+   <script language="VBScript" src="ZTIUtility.vbs"/>
+   <script language="VBScript" src="ZTIDataAccess.vbs"/>
+   <script language="VBScript"> 
+
+' //***************************************************************************
+' // ***** Script Header *****
+' //
+' // File: Z-MoveComputer-StagingOU.wsf
+' //
+' // Purpose: Moves the computer to a staging OU during deployment.
+' //  NOTE: this script should be run in the State Restore phase before the configure task.
+' //  This script must be used in conjunction with the Z-MoveComputer-SwapOUValues.wsf  script.
+' //
+' // Usage: cscript Z-MoveComputer-StagingOU.wsf [/debug:true]
+' //
+' // Customer History:
+' // 1    MK    01/18/2009   changed to use webservice instead of AD Scripting
+' // 2    MK    08/28/2009   Updated example Scripts for MDT 2010
+' // 3    MK    04/08/2010   Rewrote Script to fit to MDT 2010 standard scripts
+' //
+' // ***** End Header *****
+' //*************************************************************************** 
+
+Option Explicit
+RunNewInstance
+
+'//----------------------------------------------------------------------------
+'//
+'// Global constant and variable declarations
+'//
+'//---------------------------------------------------------------------------- 
+
+Dim iRetVal 
+
+'//----------------------------------------------------------------------------
+'// End declarations
+'//---------------------------------------------------------------------------- 
+
+'//----------------------------------------------------------------------------
+'//  Main Class
+'//----------------------------------------------------------------------------
+
+Class Z_MoveComputer_StagingOU
+
+	'//----------------------------------------------------------------------------
+	'//  Class instance variable declarations
+	'//----------------------------------------------------------------------------
+
+	' No instance variables are required
+	
+
+	'//----------------------------------------------------------------------------
+	'//  Constructor to initialize needed global objects
+	'//----------------------------------------------------------------------------
+
+	Private Sub Class_Initialize
+
+		' No initialization is required
+
+	End Sub
+	
+	
+	'//----------------------------------------------------------------------------
+	'//  Main routine
+	'//----------------------------------------------------------------------------
+
+	Function Main
+
+        iRetVal = Success
+        
+        Dim sStagingOU, sComputer, oService, oXML, sResult
+
+	    oLogging.CreateEntry "Move Computer: Start processing Move computer to Staging OU routine", LogTypeInfo
+    	
+	    ' ADsPath of the container object (OU) where you want to move the current PC to
+	    sStagingOU = oEnvironment.item("StagingOU")
+
+	    ' Process only if Staging OU has been defined
+	    If sStagingOU <> "" Then
+		    ' Update the value of the MachineObjectOU property with the StagingOU, 
+		    ' this ensures that new computers will also be built in the Staging OU
+		    oLogging.CreateEntry "Move Computer: Swapping StagingOU and MachineObjectOU properties values", LogTypeInfo
+
+		    sStagingOU = oEnvironment.item("MachineObjectOU")
+
+		    oEnvironment.item("MachineObjectOU") = oEnvironment.item("StagingOU")
+
+		    oEnvironment.item("StagingOU") = sStagingOU
+
+    	
+		    ' Execute Webservice to Move Computer to Staging OU if Computer exists already
+		    ' Create the web service instance
+		    Set oService = new WebService
+
+		    oService.IniFile = "CustomSettings.ini"
+		    oService.SectionName = "MoveComputerToOU"
+    	
+		    ' Make the web service call
+		    Set oXML = oService.Query
+		    If oXML Is Nothing then
+			    oLogging.CreateEntry "Move Computer: Unable to call MoveComputerToOU web service.", LogTypeWarning
+		    Else
+			    oXML.setProperty "SelectionNamespaces", "xmlns:mk='http://maikkoster.com/Deployment'"
+			    sResult = UCase(oXML.SelectSingleNode("mk:boolean").Text)
+			    
+			    If sResult <> "TRUE" then
+		            oLogging.CreateEntry "Move Computer: Move was not successful", LogTypeWarning
+		            iRetVal = Failure	
+		        Else
+		            oLogging.CreateEntry "Move Computer: Successfully moved Computer to staging OU", LogTypeInfo	    
+		        End If
+		    End if
+
+	    Else
+		    oLogging.CreateEntry "Move Computer: StagingOU has not been defined. Skip further processing.", LogTypeInfo
+	    End If
+        
+        Main = iRetVal
+
+	End Function
+
+End Class
+
+    </script>
+</job>

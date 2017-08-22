@@ -1,0 +1,15 @@
+To import the "Add Computer to Group" runbook
+
+- using the Orchestrator Runbook Designer, right-click on the "Runbooks" node and select "Import"
+- as File Location point it to the book sample files and select "AddComputerToGroup.ois_export"
+- Uncheck the following
+	- Counters
+	- Variables
+	- Schedules
+	- Computer Groups
+	- Import global configurations
+- Click Finish
+
+The runbook will now be available in the "Add Computer to Group folder". It's "Add Computer to Group (2)" to not conflict with the existing runbook as described in the book in Chapter 14.
+
+Note: If you did not create an Active Directory configuration named "corp.viamonstra.com" as described in the book, you will need to update the configuration for all Active Directory activities in the runbook.

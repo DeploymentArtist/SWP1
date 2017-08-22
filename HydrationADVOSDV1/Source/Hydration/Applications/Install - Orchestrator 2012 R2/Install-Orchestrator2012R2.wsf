@@ -1,0 +1,101 @@
+<job id="Install-Orchestrator2012SP1">
+<script language="VBScript" src="..\..\scripts\ZTIUtility.vbs"/>
+<script language="VBScript"> 
+
+'//----------------------------------------------------------------------------
+'// Solution: Hydration
+'// Purpose: Used to install Orchestrator 2012 SP1
+'// Usage: cscript Install-SQL2012Orchestrator.wsf [/debug:true]
+'// Version: 1.0 - August 7, 2012 - Johan Arwidmark
+'//
+'// This script is provided "AS IS" with no warranties, confers no rights and 
+'// is not supported by the authors or Deployment Artist. 
+'//
+'//----------------------------------------------------------------------------
+
+'//----------------------------------------------------------------------------
+'// Global constant and variable declarations
+'//---------------------------------------------------------------------------- 
+
+'Option Explicit 
+
+Dim iRetVal 
+
+'//----------------------------------------------------------------------------
+'// End declarations
+'//---------------------------------------------------------------------------- 
+
+'//----------------------------------------------------------------------------
+'// Main routine
+'//---------------------------------------------------------------------------- 
+
+On Error Resume Next
+iRetVal = ZTIProcess
+ProcessResults iRetVal
+On Error Goto 0 
+
+'//---------------------------------------------------------------------------
+'//
+'// Function: ZTIProcess()
+'//
+'// Input: None
+'// 
+'// Return: Success - 0
+'// Failure - non-zero
+'//
+'// Purpose: Perform main ZTI processing
+'// 
+'//---------------------------------------------------------------------------
+Function ZTIProcess() 
+
+	Dim sSetupFile
+	Dim sArguments
+	Dim sServiceUserName
+	Dim sServicePassword
+	Dim sDbServer
+	Dim sDbPort
+	Dim sDbNameNew
+	Dim sWebServicePort
+	Dim sWebConsolePort
+	
+	oLogging.CreateEntry "Install Orchestrator 2012 SP1: Starting Orchestrator installation", LogTypeInfo
+	oLogging.CreateEntry "Install Orchestrator 2012 SP1: Orchestrator setup log file are located in: " & oShell.ExpandEnvironmentStrings("%LOCALAPPDATA%") & "\Microsoft System Center 2012\Orchestrator\Logs", LogTypeInfo
+
+	' Set Orchestrator installation settings
+	sORServiceUserName = oEnvironment.Item("HydrationORServiceUserName")
+	sORServicePassword = oEnvironment.Item("HydrationORServicePassword")
+	sORDbServer = oEnvironment.Item("HydrationOSDComputerName")
+	sORDbPort = "1433"
+	sORDbNameNew = "Orchestrator"
+	sORWebServicePort = "81"
+	sORWebConsolePort = "82"
+
+	sSetupFile = oUtility.ScriptDir & "\Source\Setup\Setup.exe"
+	sArguments = "/Silent /ServiceUserName:" & sORServiceUserName & " /ServicePassword:" & sORServicePassword  & _
+	" /Components:All /DbServer:" & sORDbServer & " /DbPort:" & sORDbPort & " /DbNameNew:" & sORDbNameNew & _
+	" /WebServicePort:"& sORWebServicePort & " /WebConsolePort:" & sORWebConsolePort & " /OrchestratorRemote" & _
+	" /SendCEIPReports:0 /EnableErrorReporting:never /UseMicrosoftUpdate:0"
+
+	If not oFSO.FileExists(sSetupFile) then
+		oLogging.CreateEntry "Install Orchestrator 2012 SP1: " & sFile & " was not found, unable to install Orchestrator", LogTypeError
+		ZTIProcess = Failure
+		Exit Function
+	End if
+	
+	' Install Orchestrator 
+	iRetVal = oUtility.RunWithHeartbeat("""" & sSetupFile & """ " & sArguments)
+	
+	' Verify Installation
+	if (iRetVal = 0) or (iRetVal = 3010) then
+		ZTIProcess = Success 
+	Else 
+		ZTIProcess = Failure
+	End If
+	
+	oLogging.CreateEntry "Install Orchestrator 2012 SP1: Return code from command = " & iRetVal, LogTypeInfo
+	oLogging.CreateEntry "Install Orchestrator 2012 SP1: Finished Orchestrator installation", LogTypeInfo
+	
+End Function 
+
+</script>
+</job>

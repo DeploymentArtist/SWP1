@@ -1,0 +1,228 @@
+<job id="Configure-CreateADStructure">
+<script language="VBScript" src="..\..\scripts\ZTIUtility.vbs"/>
+<script language="VBScript"> 
+
+'//----------------------------------------------------------------------------
+'// Solution: Hydration
+'// Purpose: Used to create AD Structure
+'// Usage: Configure-CreateADStructure.wsf [/debug:true]
+'// Version: 1.2 - January 10, 2013 - Johan Arwidmark
+'//
+'// This script is provided "AS IS" with no warranties, confers no rights and 
+'// is not supported by the authors or Deployment Artist. 
+'//
+'//----------------------------------------------------------------------------
+
+
+'//----------------------------------------------------------------------------
+'// Global constant and variable declarations
+'//---------------------------------------------------------------------------- 
+
+Dim iRetVal 
+
+'//----------------------------------------------------------------------------
+'// Main routine
+'//---------------------------------------------------------------------------- 
+
+'On Error Resume Next
+iRetVal = ZTIProcess
+ProcessResults iRetVal
+On Error Goto 0 
+
+Function ZTIProcess() 
+
+	iRetVal = Success 
+	ZTIProcess = iRetval 
+	
+	oLogging.CreateEntry "Creating Hydration OUs", LogTypeInfo	
+	
+	Set oRootDSE = GetObject("LDAP://rootDSE")
+	sADsPath = "LDAP://" & oRootDSE.Get("defaultNamingContext")
+	Set oDomain = GetObject(sADsPath)
+
+	Set oOU = oDomain.Create("organizationalUnit", "ou=ViaMonstra")
+	oOU.SetInfo
+
+	Set oOU = oDomain.Create("organizationalUnit", "ou=Security Groups,ou=ViaMonstra")
+	oOU.SetInfo
+
+	Set oOU = oDomain.Create("organizationalUnit", "ou=Servers,ou=ViaMonstra")
+	oOU.SetInfo
+
+	Set oOU = oDomain.Create("organizationalUnit", "ou=Service Accounts,ou=ViaMonstra")
+	oOU.SetInfo
+
+	Set oOU = oDomain.Create("organizationalUnit", "ou=Software Groups,ou=ViaMonstra")
+	oOU.SetInfo
+
+	Set oOU = oDomain.Create("organizationalUnit", "ou=Users,ou=ViaMonstra")
+	oOU.SetInfo
+
+	Set oOU = oDomain.Create("organizationalUnit", "ou=Workstations,ou=ViaMonstra")
+	oOU.SetInfo
+
+	
+
+	' Create Users in the Service Accounts OU
+	' Note: the 66048 userAccountControl value is password never expires
+    oLogging.CreateEntry "Create Users in the Service Accounts OU", LogTypeInfo	
+	
+	sOUPath = "LDAP://ou=Service Accounts,ou=ViaMonstra," & oRootDSE.Get("defaultNamingContext")
+
+	Set oOU = GetObject(sOUPath)
+	Set oUser = oOU.Create("User", "cn=MDT_BA")
+	oUser.Put "SAMAccountName", "MDT_BA"
+    oUser.Put "Description", "MDT 2013 Build Account"
+ 	oUser.SetInfo
+
+	oUser.SetPassword "P@ssw0rd"
+	oUser.Put "userAccountControl", 66048
+	oUser.SetInfo
+
+	Set oOU = GetObject(sOUPath)
+	Set oUser = oOU.Create("User", "cn=MDT_JD")
+	oUser.Put "SAMAccountName", "MDT_JD"
+    oUser.Put "Description", "MDT 2013 Join Domain Account"
+ 	oUser.SetInfo
+
+	oUser.SetPassword "P@ssw0rd"
+	oUser.Put "userAccountControl", 66048
+	oUser.SetInfo
+
+	Set oOU = GetObject(sOUPath)
+	Set oUser = oOU.Create("User", "cn=OR_SA")
+	oUser.Put "SAMAccountName", "OR_SA"
+    oUser.Put "Description", "Orchestrator 2012 R2 Service Account"
+ 	oUser.SetInfo
+
+	oUser.SetPassword "P@ssw0rd"
+	oUser.Put "userAccountControl", 66048
+	oUser.SetInfo
+	
+	Set oOU = GetObject(sOUPath)
+	Set oUser = oOU.Create("User", "cn=CM_JD")
+	oUser.Put "SAMAccountName", "CM_JD"
+    oUser.Put "Description", "ConfigMgr 2012 R2 Join Domain Account"
+ 	oUser.SetInfo
+
+	oUser.SetPassword "P@ssw0rd"
+	oUser.Put "userAccountControl", 66048
+	oUser.SetInfo
+	
+	Set oOU = GetObject(sOUPath)
+	Set oUser = oOU.Create("User", "cn=CM_CP")
+	oUser.Put "SAMAccountName", "CM_CP"
+    oUser.Put "Description", "ConfigMgr 2012 R2 Client Push Account"
+ 	oUser.SetInfo
+
+	oUser.SetPassword "P@ssw0rd"
+	oUser.Put "userAccountControl", 66048
+	oUser.SetInfo
+
+	Set oOU = GetObject(sOUPath)
+	Set oUser = oOU.Create("User", "cn=CM_NAA")
+	oUser.Put "SAMAccountName", "CM_NAA"
+    oUser.Put "Description", "ConfigMgr 2012 R2 Network Access Account"
+ 	oUser.SetInfo
+
+	oUser.SetPassword "P@ssw0rd"
+	oUser.Put "userAccountControl", 66048
+	oUser.SetInfo
+
+	Set oOU = GetObject(sOUPath)
+	Set oUser = oOU.Create("User", "cn=CM_SR")
+	oUser.Put "SAMAccountName", "CM_SR"
+    oUser.Put "Description", "ConfigMgr 2012 R2 Reporting Services Account"
+ 	oUser.SetInfo
+
+	oUser.SetPassword "P@ssw0rd"
+	oUser.Put "userAccountControl", 66048
+	oUser.SetInfo
+
+
+	' Create Users in the Users OU
+	' Note: the 66048 userAccountControl value is password never expires
+    oLogging.CreateEntry "Create Users in the Users OU", LogTypeInfo	
+	
+	sOUPath = "LDAP://ou=Users,ou=ViaMonstra," & oRootDSE.Get("defaultNamingContext")
+	
+	Set oOU = GetObject(sOUPath)
+	Set oUser = oOU.Create("User", "cn=Johan")
+	oUser.Put "SAMAccountName", "Johan"
+    oUser.Put "Description", "Sample User Account"
+ 	oUser.SetInfo
+
+	oUser.SetPassword "P@ssw0rd"
+	oUser.Put "userAccountControl", 66048
+	oUser.SetInfo
+
+		Set oOU = GetObject(sOUPath)
+	Set oUser = oOU.Create("User", "cn=Maik")
+	oUser.Put "SAMAccountName", "Maik"
+    oUser.Put "Description", "Sample User Account"
+ 	oUser.SetInfo
+
+	oUser.SetPassword "P@ssw0rd"
+	oUser.Put "userAccountControl", 66048
+	oUser.SetInfo
+
+	
+	' Create Groups in the Security Groups OU
+	oLogging.CreateEntry "Create Groups in the Security Groups OU", LogTypeInfo	
+	
+	Const ADS_GROUP_TYPE_GLOBAL_GROUP = &h2
+	Const ADS_GROUP_TYPE_SECURITY_ENABLED = &h80000000
+
+	sOUPath = "LDAP://ou=Security Groups,ou=ViaMonstra," & oRootDSE.Get("defaultNamingContext")
+	Set oOU = GetObject(sOUPath)
+
+	Set oGroup = oOU.Create("Group", "cn=VCS Users")
+	oGroup.Put "sAMAccountName", "VCS Users"
+	oGroup.Put "groupType", ADS_GROUP_TYPE_GLOBAL_GROUP Or ADS_GROUP_TYPE_SECURITY_ENABLED
+	oGroup.SetInfo
+	
+	Set oGroup = oOU.Create("Group", "cn=VCS Readers")
+	oGroup.Put "sAMAccountName", "VCS Readers"
+	oGroup.Put "groupType", ADS_GROUP_TYPE_GLOBAL_GROUP Or ADS_GROUP_TYPE_SECURITY_ENABLED
+	oGroup.SetInfo
+	
+	Set oGroup = oOU.Create("Group", "cn=Orchestrator Administrators")
+	oGroup.Put "sAMAccountName", "Orchestrator Administrators"
+	oGroup.Put "groupType", ADS_GROUP_TYPE_GLOBAL_GROUP Or ADS_GROUP_TYPE_SECURITY_ENABLED
+	oGroup.SetInfo
+	
+	Set oGroup = oOU.Create("Group", "cn=Orchestrator Runbook Users")
+	oGroup.Put "sAMAccountName", "Orchestrator Runbook Users"
+	oGroup.Put "groupType", ADS_GROUP_TYPE_GLOBAL_GROUP Or ADS_GROUP_TYPE_SECURITY_ENABLED
+	oGroup.SetInfo
+
+
+	' Adding Users to the Security Group
+	Const ADS_PROPERTY_APPEND = 3 
+
+	sGroupOUPath = "ou=Security Groups,ou=ViaMonstra," & oRootDSE.Get("defaultNamingContext")
+	sUserOUPath = "ou=Users,ou=ViaMonstra," & oRootDSE.Get("defaultNamingContext")
+
+	Set oGroup = GetObject("LDAP://cn=Orchestrator Administrators," & sGroupOUPath) 
+ 
+	oGroup.PutEx ADS_PROPERTY_APPEND, "member", Array("cn=Johan," & sUserOUPath,"cn=Maik," & sUserOUPath)
+	oGroup.SetInfo
+	
+	Set oGroup = GetObject("LDAP://cn=Orchestrator Runbook Users," & sGroupOUPath) 
+ 
+	oGroup.PutEx ADS_PROPERTY_APPEND, "member", Array("cn=Johan," & sUserOUPath,"cn=Maik," & sUserOUPath)
+	oGroup.SetInfo
+
+
+	Set oGroup = GetObject("LDAP://cn=VCS Users," & sGroupOUPath) 
+ 
+	oGroup.PutEx ADS_PROPERTY_APPEND, "member", Array("cn=Johan," & sUserOUPath,"cn=Maik," & sUserOUPath)
+	oGroup.SetInfo
+
+	
+End Function
+  
+
+</script>
+</job>
+

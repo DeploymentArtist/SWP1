@@ -1,0 +1,93 @@
+Create the MonitorEvent Class
+
+public class MonitorEvent
+{
+	public string uniqueID { get; set; }
+	public string computerName { get; set; }
+	public string messageID { get; set; }
+	public string severity { get; set; }
+	public string stepName { get; set; }
+	public Int16 currentstep { get; set; }
+	public Int16 totalSteps { get; set; }
+	public string id { get; set; }
+	public string message { get; set; }
+	public string dartIP { get; set; }
+	public string dartPort { get; set; }
+	public string dartTicket { get; set; }
+	public string vmHost { get; set; }
+	public string vmName { get; set; }
+}
+
+
+
+Add the PostEvent Method
+
+using MonitoringDemoCSharp.Models;
+using System.Reflection;
+using System.IO;
+
+[HttpGet]
+public string PostEvent([FromUri]MonitorEvent monitorEvent)
+{
+  // Ensure there is a unique DeploymentID
+  if (string.IsNullOrEmpty(monitorEvent.uniqueID))
+  {
+    monitorEvent.uniqueID = Guid.NewGuid().ToString();
+  }
+  // Read properties
+  string param = "";
+  string csv = "";
+  var props = typeof(MonitorEvent).GetProperties();
+  foreach (PropertyInfo prop in props)
+  {
+    object value = prop.GetValue(monitorEvent) ?? "";
+    string strValue = value.ToString();
+    param += string.Format("{0}={1}&", prop.Name, strValue);
+    csv += string.Format("{0};", value.ToString());
+  }
+  // Create URL
+  string MDTURL = “http://CM01:9800/MDTMonitorEvent/PostEvent?";
+  Uri MDTURI = new Uri(MDTURL + param);
+  // Send data 
+  WebClient client = new WebClient();
+  client.OpenRead(MDTURI);
+  // Write properties to file
+  csv += Environment.NewLine;
+  string path = 
+    System.Web.Hosting.HostingEnvironment.MapPath("~/");
+  File.AppendAllText(path + "MonitorEvents.csv", csv);
+
+  // Return DeploymentID
+  return monitorEvent.uniqueID;
+}
+
+
+Default Routing
+
+config.Routes.MapHttpRoute(
+    name: "DefaultApi",
+    routeTemplate: "api/{controller}/{action}/{id}",
+    defaults: new { id = RouteParameter.Optional }
+);
+
+
+Return XML
+
+foreach (var item in GlobalConfiguration.Configuration.Formatters)
+{
+  if (typeof(XmlMediaTypeFormatter) == item.GetType())
+  {
+    item.AddRequestHeaderMapping("Accept", "*/*", 
+        StringComparison.OrdinalIgnoreCase, false, 
+        "application/xml");
+  }
+}
+
+
+Add the GetSettings Method
+
+[HttpGet]
+public string GetSettings(string uniqueID)
+{
+  return "";
+}

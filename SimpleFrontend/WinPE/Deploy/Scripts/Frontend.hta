@@ -1,0 +1,386 @@
+<html>
+
+<!--
+
+//////////////////////////////////////////////////
+//
+// Script File:
+//
+//  Frontend.hta
+//
+//   This script drives the Simple Frontend for ConfigMgr 2012 R2
+//
+//   Author: Johan Arwidmark	
+//   
+//   Disclaimer
+//   This script is provided "AS IS" without express 
+//   or implied warranty of any kind.
+//
+//////////////////////////////////////////////////
+
+-->
+
+<head>
+<title>Simple Frontend for ConfigMgr 2012 R2</title>
+
+<link href="Style.css" type="text/css" rel="stylesheet">
+        
+<HTA:APPLICATION ID="oWizard" APPLICATIONNAME="" ICON="Wizard.ico" 
+    SCROLL="no" 
+    SELECTION="no" 
+    INNERBORDER="no" 
+    BORDER="normal" 
+    SINGLEINSTANCE="no" 
+    SYSMENU="yes" 
+    MAXIMIZEBUTTON="no" 
+    MINIMIZEBUTTON="no" 
+    />
+</head>
+
+<script language="vbscript" type="text/vbscript" src="ZTIUtility.vbs"></script> 
+<script language="vbscript" type="text/vbscript" src="ZTIDataAccess.vbs"></script> 
+<script language="vbscript" type="text/vbscript">
+
+    
+
+Sub Window_onload
+
+'on error resume next
+
+	CenterWindow 700,480
+
+	ButtonFinish.disabled = true
+	ButtonCancel.disabled = false
+
+    ' Display initial text
+    strHTML = ""
+    strHTML = strHTML & "<H1>Simple Frontend for ConfigMgr 2012 R2</H1>"
+    strHTML = strHTML & "<span style=width: 95%;>"
+    strHTML = strHTML & "<table cellpadding=0 cellspacing=0 border=0>"
+    strHTML = strHTML & "<tr>"
+    strHTML = strHTML & "<td>Gathering hardware information, please wait...</td>"
+    strHTML = strHTML & "</tr>"
+    strHTML = strHTML & "</table>"
+    strHTML = strHTML & "</span>"
+
+    document.getElementByID("MyContentArea").innerHTML = strHTML
+
+    ' Process ZTIGather.wsf
+    oShell.Run "wscript.exe " & oUtility.ScriptDir & "\ZTIGather.wsf",1,True 
+	
+	oEnvironment.Item("OSDCOMPUTERNAME") = GetOfflineComputername
+	
+	' Get a list of OUs from Active Directory
+	sOUList = GetOUList
+	
+	' Get a list of task sequences from ConfigMgr
+	sTaskSequenceList = GetTaskSequenceList
+
+
+    ' Display form
+	
+    strHTML = ""
+    strHTML = strHTML & "<H1>Simple Frontend for ConfigMgr 2012 R2</H1>"
+    strHTML = strHTML & "<span style=width: 95%;>"
+    strHTML = strHTML & "<table cellpadding=0 cellspacing=0 border=0>"
+    strHTML = strHTML & "<tr>"
+    strHTML = strHTML & "<td width=160 height=30>Computer name:</td>"
+    strHTML = strHTML & "<td><input type=text id=sComputerName name=sComputerName size=20 onpropertychange=ValidateComputerName tabindex=1></td>"
+    strHTML = strHTML & "</tr>"
+    strHTML = strHTML & "<td height=30>Organizational Unit</td>"
+    strHTML = strHTML & " <td><Select name=ddOUList tabindex=2></Select>"
+    strHTML = strHTML & "</tr>"
+	strHTML = strHTML & "<tr>"
+    strHTML = strHTML & "<td height=30>OS Image: </td>"
+    strHTML = strHTML & "<td><Select name=ddTaskSequenceList tabindex=3></Select></td>"
+    strHTML = strHTML & "</tr>"
+	strHTML = strHTML & "<tr>"
+	strHTML = strHTML & "<td colspan=2><br><strong>Note:</strong> If the computer account already exists, it will be moved to the target OU</td>"
+	strHTML = strHTML & "</tr>"
+    strHTML = strHTML & "<tr>"
+    strHTML = strHTML & "<td colspan=2><br><textarea name=txtStdOut  rows=5 cols=70 style=overflow:hidden unselectable=off tabindex=4></textarea></td>"
+    strHTML = strHTML & "</tr>"
+    strHTML = strHTML & "</table>"
+    strHTML = strHTML & "</span>"
+
+    document.getElementByID("MyContentArea").innerHTML = strHTML
+    
+    GetFrontendData()
+
+    PrintOut "Serial Number: " & oEnvironment.Item("SERIALNUMBER")
+    PrintOut "Model: " & oEnvironment.Item("MODEL")
+    PrintOut "MAC Address: " & oEnvironment.Item("MACADDRESS001")
+    PrintOut "Default Gateway: " & oEnvironment.Item("DEFAULTGATEWAY001")
+
+	' Enable Task Sequence Download Retry Policy
+	' oEnvironment.Item("SMSTSAssignmentsDownloadInterval") = "5"
+	' oEnvironment.Item("SMSTSAssignmentsDownloadRetry") = "5"
+		
+End Sub	
+
+Function GetOfflineComputername()
+	On Error Goto 0
+
+	Dim CompName : CompName = ""
+	Dim ret, sOldSystem : sOldSystem = ""
+	For Each drv In Array("C", "D", "E", "F")
+		If ofso.FileExists(drv & ":\windows\system32\config\system") Then
+			sOldSystem = drv & ":\windows\system32\config\system"
+			Exit For
+		End If
+	Next
+	oLogging.CreateEntry "Mounting Offline registry " & sOldSystem, LogTypeInfo
+	ret = oShell.Run ("reg load HKLM\z " & sOldSystem, 0, True)
+	If ret = 0 Then
+		CompName = oShell.RegRead("HKLM\z\ControlSet001\Services\Tcpip\Parameters\Hostname")
+		If CompName <> "" Then
+			oLogging.CreateEntry "Found old computername '" & CompName & "'", LogTypeInfo
+		Else
+			oLogging.CreateEntry "Old computername name could not be found", LogTypeWarning
+		End If
+	Else
+		oLogging.CreateEntry "Could not mount offline registry " & sOldSystem, LogTypeWarning
+	End If
+	
+	oShell.Run "REG UNLOAD HKLM\Z", 0, True  
+
+	GetOfflineComputername = CStr(CompName)
+	
+	'msgbox GetOfflineComputername
+	  
+End Function
+
+
+
+Sub CenterWindow( widthX, heightY )
+    self.ResizeTo widthX, heightY 
+    self.MoveTo (screen.Width - widthX)/2, (screen.Height - heightY)/2
+End Sub
+
+Sub GetFrontendData
+
+  	sComputerName.value = oEnvironment.Item("OSDCOMPUTERNAME")
+  	
+    set oXMLDoc = oUtility.CreateXMLDOMObjectEx("OUList.xml")
+    for each node in oXMLDoc.documentElement.childNodes
+        Set objOption = Document.createElement("OPTION")
+        
+        sOUText = node.attributes.getNamedItem("distinguishedName").text
+        
+        If InStr(sOUText, "Domain Controllers") Then
+            ' Do nothing
+        Else
+        
+            sOUText = replace(sOUText,"DC=","")
+            sOUText = replace(sOUText,"dc=","")
+            sOUText = replace(sOUText,"OU=","")
+            sOUText = replace(sOUText,"ou=","")
+            sOUText = replace(sOUText,",","/")
+                    
+            objOption.Text = sOUText
+            
+            objOption.Value = node.attributes.getNamedItem("distinguishedName").text
+            ddOUList.Add(objOption) 
+        End If
+
+    next
+	
+	set oXMLDoc = oUtility.CreateXMLDOMObjectEx("TaskSequenceList.xml")
+    for each node in oXMLDoc.documentElement.childNodes
+        Set objOption = Document.createElement("OPTION")
+        objOption.Text = node.attributes.getNamedItem("PackageName").text
+
+        sTSListText = node.attributes.getNamedItem("PackageName").text
+
+	    objOption.Value = node.attributes.getNamedItem("AdvertisementID").text
+	    ddTaskSequenceList.Add(objOption) 
+
+    next
+	
+		
+End Sub
+
+Sub ButtonFinishClick
+    oEnvironment.Item("WizardComplete") = "Y"
+    oEnvironment.Item("OSDCOMPUTERNAME") = sComputerName.value
+    oEnvironment.Item("MACHINEOBJECTOU") = ddOUList.value
+	oEnvironment.Item("SMSTSPreferredAdvertID") = ddTaskSequenceList.value
+
+    strHTML = ""
+    strHTML = strHTML & "<H1>Simple Frontend for ConfigMgr 2012 R2</H1>"
+    strHTML = strHTML & "<span style=width: 95%;>"
+    strHTML = strHTML & "<table cellpadding=0 cellspacing=0 border=0>"
+    strHTML = strHTML & "<tr>"
+    strHTML = strHTML & "<td>Completing the wizard...</td>"
+    strHTML = strHTML & "</tr>"
+    strHTML = strHTML & "</table>"
+    strHTML = strHTML & "</span>"
+
+    document.getElementByID("MyContentArea").innerHTML = strHTML
+
+    ' Move machine to correct OU in AD
+	'msgbox oEnvironment.Item("OSDCOMPUTERNAME")
+	'msgbox oEnvironment.Item("MACHINEOBJECTOU")
+	
+    MoveComputerToOU
+	
+	Self.close
+    
+End Sub
+
+
+sub ButtonCancelClick
+	If Msgbox("Are you sure you want to cancel?",4,"Cancel wizard?") = vbYES Then
+		window.Close
+	End If
+end sub
+
+
+Sub PrintOut(strText)
+	txtStdOut.value = txtStdOut.value & VbCrLf & strText
+End Sub
+
+Function GetOUList
+
+	oLogging.CreateEntry "Getting Organizational Units List", LogTypeInfo
+
+	Dim oService
+	Dim oXML
+	Dim sGetOUList
+
+	' Create the web service instance
+
+	Set oService = new WebService
+	oService.IniFile = oEnvironment.Item("RulesFile")
+	oService.SectionName = "GetOUList"
+
+
+	' Call the web service
+
+	Set oXML = oService.Query
+
+
+	If oXML is Nothing then
+		oLogging.CreateEntry "GetOUList: Unable to query web service.", LogTypeWarning
+		sOUList = ""
+	Else
+        oXML.loadXML HTMLDecode(oXML.documentElement.Text)
+        oXML.save(oUtility.ScriptDir & "\OUList.xml")
+	End if
+
+	GetOUList = sGetOUList
+	
+End Function
+
+Function MoveComputerToOU
+
+    Dim oService
+    Dim oXML
+
+    ' Create the web service instance
+
+    Set oService = new WebService
+    oService.IniFile = oEnvironment.Item("RulesFile")
+    oService.SectionName = "MoveComputerToOU"
+
+    ' Make the web service call
+
+    MoveComputerToOU = false
+    Set oXML = oService.Query
+    oXML.setProperty "SelectionNamespaces", "xmlns:nsa='http://www.deploymentresearch.com'"
+
+    If oXML is Nothing then
+	    oLogging.CreateEntry "Unable to call MoveComputerToOU web service.", LogTypeWarning
+    ElseIf UCase(oXML.SelectSingleNode("nsa:boolean").Text) = "TRUE" then
+	    MoveComputerToOU = true
+    End if
+
+End Function
+
+Function GetTaskSequenceList
+
+	oLogging.CreateEntry "GetTaskSequenceList: Getting Task Sequence List", LogTypeInfo
+
+	Dim oService
+	Dim oXML
+	Dim sTaskSequenceList
+
+	' Create the web service instance
+
+	Set oService = new WebService
+	oService.IniFile = oEnvironment.Item("RulesFile")
+	oService.SectionName = "GetTaskSequenceList"
+
+
+	' Call the web service
+
+	Set oXML = oService.Query
+
+
+	If oXML is Nothing then
+		oLogging.CreateEntry "GetTaskSequenceList: Unable to query web service.", LogTypeWarning
+		sTaskSequenceList = ""
+	Else
+        oXML.loadXML HTMLDecode(oXML.documentElement.Text)
+        oXML.save(oUtility.ScriptDir & "\TaskSequenceList.xml")
+	End if
+
+	GetTaskSequenceList = sTaskSequenceList
+	
+End Function
+
+Function ValidateComputerName
+	
+	If Len(sComputerName.value) > 15 then
+		ButtonFinish.disabled = true
+	ElseIf sComputerName.value = "" then
+		ButtonFinish.disabled = true
+	Else 
+	    ButtonFinish.disabled = false
+    End If
+    
+ End Function
+
+Function HTMLDecode(byVal encodedstring)
+
+         Dim tmp, i
+         tmp = encodedstring
+         tmp = Replace( tmp, "&quot;", chr(34) )
+         tmp = Replace( tmp, "&lt;"  , chr(60) )
+         tmp = Replace( tmp, "&gt;"  , chr(62) )
+         tmp = Replace( tmp, "&amp;" , chr(38) )
+         tmp = Replace( tmp, "&nbsp;", chr(32) )
+         For i = 1 to 255
+                 tmp = Replace( tmp, "&#" & i & ";", chr( i ) )
+         Next
+         HTMLDecode = tmp
+End Function
+
+</script>
+
+<body Language="VBScript">
+        <!-- Create a 2 x 3 table to place all of our content in. Makes resizing of windows easier -->
+        <table cellpadding="0" cellspacing="0" border="0" width="100%" style="height: 100%;">
+
+            <!-- Content Area of Wizard -->
+            <tr valign="top">
+                <td colspan="2" >
+                    <div id="MyContentArea" class="ContentArea" >
+                        
+                    </div>
+                      
+                </td>            
+            </tr>
+            
+            <!-- Footer of Wizard -->
+            <tr valign="middle"  >
+                <td class="CommandArea" id="RightWizardButtons" align="right" colspan="2" >
+                    <button accesskey=N type=submit id=buttonFinish onclick=ButtonFinishClick ><U>F</U>inish</button>
+                    <button accesskey=C id=buttonCancel onclick=ButtonCancelClick><U>C</U>ancel</button>
+                </td>
+            </tr>
+
+        </table>
+    </body>
+</html>
+

@@ -1,0 +1,99 @@
+<job id="Install-NETFramework40">
+<script language="VBScript" src="..\..\scripts\ZTIUtility.vbs"/>
+<script language="VBScript"> 
+
+'//----------------------------------------------------------------------------
+'// Solution: Hydration
+'// Purpose: Used to Install .Net Framework 4.0 4.0
+'// Usage: cscript Install-NETFramework40.wsf [/debug:true]
+'// Version: 1.0 - 2 May 2011 - Johan Arwidmark
+'//
+'// This script is provided "AS IS" with no warranties, confers no rights and 
+'// is not supported by the authors or Deployment Artist. 
+'//
+'//----------------------------------------------------------------------------
+
+'//----------------------------------------------------------------------------
+'// Global constant and variable declarations
+'//---------------------------------------------------------------------------- 
+
+Option Explicit 
+
+Dim iRetVal 
+
+'//----------------------------------------------------------------------------
+'// End declarations
+'//---------------------------------------------------------------------------- 
+
+'//----------------------------------------------------------------------------
+'// Main routine
+'//---------------------------------------------------------------------------- 
+
+'On Error Resume Next
+iRetVal = ZTIProcess
+ProcessResults iRetVal
+On Error Goto 0 
+
+'//---------------------------------------------------------------------------
+'//
+'// Function: ZTIProcess()
+'//
+'// Input: None
+'// 
+'// Return: Success - 0
+'// Failure - non-zero
+'//
+'// Purpose: Perform main ZTI processing
+'// 
+'//---------------------------------------------------------------------------
+Function ZTIProcess() 
+
+	Dim sFile
+	
+	oLogging.CreateEntry "Install .Net Framework 4.0: Starting .Net Framework 4.0 installation", LogTypeInfo	
+	
+	sFile = oUtility.ScriptDir & "\source\dotNetFx40_Full_x86_x64.exe"
+
+	If not oFSO.FileExists(sFile) then
+		oLogging.CreateEntry "Install .Net Framework 4.0: " & sFile & " was not found, unable to Install .Net Framework 4.0", LogTypeError
+		ZTIProcess = Failure
+		Exit Function
+	End if
+	
+	' Disable Zone Checks
+	oEnv("SEE_MASK_NOZONECHECKS") = 1 
+
+	' Install NET Framework 4.0
+	iRetVal = oShell.Run("""" & sFile & """ /q /norestart", 0, True)
+	
+	if (iRetVal = 0) or (iRetVal = 3010) then
+		ZTIProcess = Success 
+	Else 
+		ZTIProcess = Failure
+	End If
+	
+	oLogging.CreateEntry "Install .Net Framework 4.0: Return code from command = " & iRetVal, LogTypeInfo
+	oLogging.CreateEntry "Install .Net Framework 4.0: Finished .Net Framework installation", LogTypeInfo	
+
+	' Enable Zone Checks
+	oEnv.Remove("SEE_MASK_NOZONECHECKS")
+
+End Function 
+
+</script>
+</job>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

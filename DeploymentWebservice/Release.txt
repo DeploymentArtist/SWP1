@@ -1,0 +1,38 @@
+﻿
+Release 7.3 (30. Aug 2011):
+	- Added support for Well Known objects in Active Directoy
+	- Added function "GetDefaultComputerContainer" to return the DN of the Default Computer container
+	- Added function "GetDefaultUserContainer" to return the DN of the Default User cotainer
+	- Added function "GetSystemContainer" to return the DN of the System container
+	- Added function "GenerateComputerName" to generate a RIS style computer name with incrementing numbers based on a prefix
+	- Added function "DoesUserExist" to check if a User exists in AD already
+	- Added functions "GetComputerGroups" and "GetUserGroups" to return a list of Groups that the Computer or User are member of
+	- Added functions "GetComputerGroupsByName" and "GetUserGroupsByName" to return a list of Groups by their name that the Computer or User are member of
+	- Added functions "IsComputerGroupMember" and "IsUserGroupMember" to verifiy if a computer or user is member of the specified group.
+	- Integrated Roger Zanders SCCM Client Center automation dll and exposed various functions to be used as a webservice
+
+Release 7.2 (12. Oct 2010):
+	- fixed Bug in "HasOSDAdvertisement" function that would always evaluate to "False" even if a valid Advertisement was available
+	- fixed Bug in MacAddress evaluation of MacAddresses without colons or other separators.
+	- Extended logic of "RemoveComputerFromCollection" so it will be able to delete a computer from a collection without knowing the DirectRule name. Either MacAddress, UUID or ResourceID is now sufficient to have it removed.
+	- Limited evalution of Include/Exclude filters to the queried entity (collection, advertisement, task sequence) to increase flexibility
+
+
+Release 7.1 (12. Aug 2010):
+    - Rewrote SCCM and AD part of the webservice to use NLog as logging provider
+    - Improved SCCM webservice perfomance by caching SCCM namespaces between requests
+    - Rewrote internal SCCM list functions to accept Include/Exclude filters
+    - Added function "GetAdvertisementsFiltered" to return a optionally filtered list of advertisements
+    - Added function "GetOSDAdvertisementsFiltered" as copy of "GetOSDAdvertisements" that accepts Include/Exclude filters.
+    - Added function "GetTaskSequencesFiltered" as copy of "GetTaskSequences" that accepts Include/Exclude filters.
+    - Added function "GetOSDTaskSequencesFiltered" as copy of "GetOSDTaskSequences" that accepts Include/Exclude filters.
+    - Added function "GetOSDCollectionsFiltered" as copy of "GetOSDCollections" that accepts Include/Exclude filters.
+    - Added function "GetCollectionsFiltered" to return a list of all collections at a given site optionally filtered.
+    - Added function "ApproveClients" to approve all clients of a collection
+    - Added function "ApproveClient" to approve a specific client
+    - Added function "RefreshCollection" to trigger a re-evaluation of a collection
+    - Added function "GetCollectionMembers" to return a list of current collection members
+    - Fixed a bug in some Active Directory related methods that would still use the credentials of the Application Pool account even if an explicit account had been configured
+    - improved performance of querying for local Site/Domain Controller in Active Directory  
+    - Added function "CopyComputer" to copy an existing computer account including its properties.
+    

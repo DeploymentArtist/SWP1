@@ -1,0 +1,6 @@
+<Wizard>
+  <Global>
+  </Global>
+  <Pane id="LocationSelection" reference="DeployWiz_LocationSelection.xml">
+  </Pane>
+</Wizard>

@@ -1,0 +1,71 @@
+<job id="MDT_Script_Template">
+   <script language="VBScript" src="ZTIUtility.vbs"/>
+   <script language="VBScript" src="ZTIDataAccess.vbs"/>
+   <script language="VBScript">
+' //***********************************************************
+' // ***** Script Header *****
+' //
+' // File:      MDT_Script_Template.wsf
+' //
+' // Purpose:   Template for creating new MDT 2013 based scripts
+' //
+' // Usage:     cscript MDT_Script_Template.wsf [/debug:true]
+' //
+' //
+' // Customer History:
+' // 
+' //
+' // ***** End Header *****
+' //***********************************************************
+
+Option Explicit
+RunNewInstance
+
+' //***********************************************************
+' //
+' // Global constants
+' //
+' //***********************************************************
+
+' //***********************************************************
+' // End declarations
+' //***********************************************************
+
+
+' //***********************************************************
+' // Main Class
+' //***********************************************************
+
+Class MDT_Script_Template
+
+    ' //*******************************************************
+    ' // Class instance variable declarations
+    ' //*******************************************************
+
+    Dim iRetVal
+    
+    ' //*******************************************************
+    ' // Constructor to initialize needed global objects
+    ' //*******************************************************
+
+    Private Sub Class_Initialize
+
+        ' Put your initialization code here
+
+    End Sub
+
+
+    ' //*******************************************************
+    ' // Main routine
+    ' //*******************************************************
+    
+    Function Main
+    
+        ' Insert your code here
+
+    End Function
+
+End Class
+
+   </script>
+</job>

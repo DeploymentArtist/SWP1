@@ -1,0 +1,82 @@
+<job id="Install-SQL2012forOrchestrator">
+<script language="VBScript" src="..\..\scripts\ZTIUtility.vbs"/>
+<script language="VBScript"> 
+
+'//----------------------------------------------------------------------------
+'// Solution: Hydration
+'// Purpose: Used to install SQL Server 2012 for SC Orchestrator 2012 SP1
+'// Usage: cscript Install-SQL2012forOrchestrator.wsf [/debug:true]
+'// Version: 1.0 - August 7, 2012 - Johan Arwidmark
+'//
+'// This script is provided "AS IS" with no warranties, confers no rights and 
+'// is not supported by the authors or Deployment Artist. 
+'//
+'//----------------------------------------------------------------------------
+
+'//----------------------------------------------------------------------------
+'// Global constant and variable declarations
+'//---------------------------------------------------------------------------- 
+
+Option Explicit 
+
+Dim iRetVal 
+
+'//----------------------------------------------------------------------------
+'// End declarations
+'//---------------------------------------------------------------------------- 
+
+'//----------------------------------------------------------------------------
+'// Main routine
+'//---------------------------------------------------------------------------- 
+
+On Error Resume Next
+iRetVal = ZTIProcess
+ProcessResults iRetVal
+On Error Goto 0 
+
+'//---------------------------------------------------------------------------
+'//
+'// Function: ZTIProcess()
+'//
+'// Input: None
+'// 
+'// Return: Success - 0
+'// Failure - non-zero
+'//
+'// Purpose: Perform main ZTI processing
+'// 
+'//---------------------------------------------------------------------------
+Function ZTIProcess() 
+
+	Dim sFile
+	Dim sIniFile 
+
+	oLogging.CreateEntry "Install SQL Server 2012 SP1: Starting installation", LogTypeInfo
+	
+	' Install SQL Server 2012
+	sFile = oUtility.ScriptDir & "\source\setup.exe"
+	sIniFile = oUtility.ScriptDir & "\ConfigurationFileOrchestrator2012R2.ini"
+
+	If not oFSO.FileExists(sFile) then
+		oLogging.CreateEntry "Install SQL Server 2012 SP1: " & sFile & " was not found, unable to install SQL Server 2012", LogTypeError
+		ZTIProcess = Failure
+		Exit Function
+	End if
+
+	oLogging.CreateEntry """" & sFile & """ /configurationfile=""" & sIniFile & """", LogTypeInfo
+	
+	iRetVal = oUtility.RunWithHeartbeat("""" & sFile & """ /configurationfile=""" & sIniFile & """")
+	
+	if (iRetVal = 0) or (iRetVal = 3010) then
+		ZTIProcess = Success 
+	Else 
+		ZTIProcess = Failure
+	End If
+	
+	oLogging.CreateEntry "Install SQL Server 2012 SP1: Return code from command = " & iRetVal, LogTypeInfo
+	oLogging.CreateEntry "Install SQL Server 2012 SP1: Finished installation", LogTypeInfo
+	
+End Function 
+
+</script>
+</job>

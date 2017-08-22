@@ -1,0 +1,82 @@
+<job id="MDT_Script_Template">
+   <script language="VBScript" src="ZTIUtility.vbs"/>
+   <script language="VBScript" src="ZTIDataAccess.vbs"/>
+   <script language="VBScript">
+
+' //***********************************************************
+' // ***** Script Header *****
+' //
+' // File:      MDT_Script_Template.wsf
+' //
+' // Purpose:   Template for creating new MDT 2013 based scripts
+' //
+' // Usage:     cscript MDT_Script_Template.wsf [/debug:true]
+' //
+' //
+' // Customer History:
+' // 
+' //
+' // ***** End Header *****
+' //***********************************************************
+
+Option Explicit
+RunNewInstance
+
+' //***********************************************************
+' // Global constants
+' //***********************************************************
+
+' //***********************************************************
+' // End declarations
+' //***********************************************************
+
+
+' //***********************************************************
+' // Main Class
+' //***********************************************************
+
+Class ZTIGenerateComputerName
+
+    ' //*******************************************************
+    ' // Class instance variable declarations
+    ' //*******************************************************
+
+    Dim iRetVal
+    
+    ' //*******************************************************
+    ' // Constructor to initialize needed global objects
+    ' //*******************************************************
+
+    Private Sub Class_Initialize
+
+        ' Put your initialization code here
+
+    End Sub
+
+
+    ' //*******************************************************
+    ' // Main routine
+    ' //*******************************************************
+    
+    Function Main
+    
+		' Generate Computer name based on MacAddress
+		Dim sCN
+		sCN = oEnvironment.Item("MACAddress")
+		sCN = Replace(sCN,":","")
+		' Append Laptop/Desktop specific Prefix
+		If oEnvironment.Item("IsLaptop") = "TRUE" Then
+			sCN = "L" & sCN
+		Else
+			sCN = "D" & sCN
+		End If
+		' Update OSDComputerName property
+		oEnvironment.Item("OSDComputerName") = sCN
+
+
+    End Function
+
+End Class
+
+   </script>
+</job>

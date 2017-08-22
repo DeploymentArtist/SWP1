@@ -1,0 +1,93 @@
+<job id="Z_MoveComputer_SwapOUValues">
+    <script language="VBScript" src="ZTIUtility.vbs"/>
+    <script language="VBScript"> 
+
+' //***************************************************************************
+' // ***** Script Header *****
+' //
+' // File: Z-MoveComputer-SwapOUValues.wsf
+' //
+' // Purpose: Swaps the OU values back to their orginal values
+' //  This script must be used in conjunction with the Z-MoveComputer-StagingOU.wsf script
+' //  NOTE: this script should be run in the State Restore phase after the configure task
+' //
+' // Usage: Z_MoveComputer_SwapOUValues.wsf [/debug:true]
+' //
+' // Customer History:
+' // 1    MK    01/18/2009   Created initial version
+' // 2    MK    08/28/2009   Updated example Scripts for MDT 2010
+' // 3    MK    04/08/2010   Rewrote Script to fit to MDT 2010 standard scripts
+' //
+' // ***** End Header *****
+' //*************************************************************************** 
+
+Option Explicit
+RunNewInstance
+
+'//----------------------------------------------------------------------------
+'//
+'// Global constant and variable declarations
+'//
+'//---------------------------------------------------------------------------- 
+
+Dim iRetVal 
+
+'//----------------------------------------------------------------------------
+'// End declarations
+'//---------------------------------------------------------------------------- 
+
+'//----------------------------------------------------------------------------
+'//  Main Class
+'//----------------------------------------------------------------------------
+
+Class Z_MoveComputer_SwapOUValues
+
+	'//----------------------------------------------------------------------------
+	'//  Class instance variable declarations
+	'//----------------------------------------------------------------------------
+
+	' No instance variables are required
+	
+
+	'//----------------------------------------------------------------------------
+	'//  Constructor to initialize needed global objects
+	'//----------------------------------------------------------------------------
+
+	Private Sub Class_Initialize
+
+		' No initialization is required
+
+	End Sub
+	
+	
+	'//----------------------------------------------------------------------------
+	'//  Main routine
+	'//----------------------------------------------------------------------------
+
+	Function Main
+
+        iRetVal = Success
+        
+        Dim strStagingOU
+        
+        ' Check if StagingOU has been defined
+	    If oEnvironment.Item("StagingOU") <> "" Then
+		    ' Swap back values that were orginally swapped in the Z_MoveComputer_StagingOU.wsf script
+		    oLogging.CreateEntry "Move Computer: Swapping StagingOU and MachineObjectOU properties values", LogTypeInfo
+		    strStagingOU = oEnvironment.item("MachineObjectOU")
+		    oEnvironment.item("MachineObjectOU") = oEnvironment.item("StagingOU")
+		    oEnvironment.item("StagingOU") = strStagingOU
+    	
+		    oLogging.CreateEntry "Move Computer: MachineObjectOU property has been reverted to its orginal value", LogTypeInfo
+	    Else
+		    oLogging.CreateEntry "Move Computer: StagingOU not defined. Skip further processing", LogTypeInfo	
+	    End If
+        
+		Main = iRetVal
+
+	End Function
+
+End Class
+
+    </script>
+</job>

@@ -1,0 +1,23 @@
+<Wizard>
+  <Global>
+    <CustomScript>DeployWiz_LocationSelection.vbs</CustomScript>
+  </Global>
+  <Pane id="LocationSelection" title="LocationSelection">
+    <Body><![CDATA[<h1>Please select the location for this computer.</h1>
+<table>
+  <tr>
+    <td>
+      Location
+    </td>
+    <td>
+      <select size="1" id="cloc"
+       name="CurrentLocation"></select>
+    </td>
+  </tr>
+</table>
+]]></Body>
+    <Condition><![CDATA[Property("SkipLocationSelection")<>"YES"]]></Condition>
+    <Initialization><![CDATA[InitializeLocation "CurrentLocation", "Location"]]></Initialization>
+    <Validation><![CDATA[ValidateLocation("CurrentLocation")]]></Validation>
+  </Pane>
+</Wizard>
