@@ -20,7 +20,7 @@ Author - Johan Arwidmark
 Param
 (
 [parameter(mandatory=$true,HelpMessage="Please, provide a name.")][ValidateNotNullOrEmpty()]$Account,
-[parameter(mandatory=$true,HelpMessage="Please, provide the password to be used.")][ValidateNotNullOrEmpty()]$TargetOU
+[parameter(mandatory=$true,HelpMessage="Please, provide the organization unit to be used.")][ValidateNotNullOrEmpty()]$TargetOU
 )
 
 # Start logging to screen
